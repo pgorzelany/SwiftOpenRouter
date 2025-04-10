@@ -3,6 +3,25 @@ import Testing
 import XCTest
 import Foundation
 
+// Define the response structure expected by the API
+struct TaskStatusResponse: Decodable, Sendable {
+    let status: TaskStatus
+}
+
+// Add conformance to JSONSchemaConvertible for TaskStatusResponse
+extension TaskStatusResponse: JSONSchemaConvertible {
+    static func jsonSchema() -> JSONSchemaDefinition {
+        // Define the object schema with a 'status' property using TaskStatus's schema
+        .object(
+            description: "Wrapper object for task status.",
+            properties: [
+                "status": TaskStatus.schemaDefinition // Reference the schema from the original TaskStatus
+            ],
+            required: ["status"]
+        )
+    }
+}
+
 struct StructuredOutputAPITests {
     
     private let apiKey: String
@@ -13,7 +32,7 @@ struct StructuredOutputAPITests {
             self.apiKey = key
         } else {
             #warning("API key not set: Set OPENROUTER_API_KEY environment variable for API tests.")
-            self.apiKey = ""
+            self.apiKey = "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"
         }
         self.client = OpenRouterClient(apiKey: self.apiKey)
     }
@@ -29,21 +48,16 @@ struct StructuredOutputAPITests {
             ]
         )
 
-        do {
-            let weatherData: WeatherResponse = try await client.getChatCompletion(
-                request: request,
-                responseType: WeatherResponse.self
-            )
-            
-            print("Decoded Weather Data: \(weatherData)")
-            
-            #expect(!weatherData.location.isEmpty)
-            #expect(weatherData.location.lowercased().contains("tokyo"))
-            #expect(["celsius", "fahrenheit"].contains(weatherData.unit))
+        let weatherData: WeatherResponse = try await client.getChatCompletion(
+            request: request,
+            responseType: WeatherResponse.self
+        )
 
-        } catch {
-            XCTFail("Failed to get typed chat completion: \(error)")
-        }
+        print("Decoded Weather Data: \(weatherData)")
+
+        #expect(!weatherData.location.isEmpty)
+        #expect(weatherData.location.lowercased().contains("tokyo"))
+        #expect(["celsius", "fahrenheit"].contains(weatherData.unit))
     }
 
     @Test func testStructuredOutputAPIEnum() async throws {
@@ -52,23 +66,19 @@ struct StructuredOutputAPITests {
         let request = ChatCompletionRequest(
             model: "openai/gpt-4o",
             messages: [
-                .init(role: .system, content: "You are an assistant that determines task status. Respond with *only* one of the following strings based on the user query: PENDING, PROCESSING, COMPLETED, FAILED. The response must exactly match the schema derived from the TaskStatus enum."),
+                .init(role: .system, content: "You are an assistant that determines task status. Respond with *only* one of the following strings based on the user query: PENDING, PROCESSING, COMPLETED, FAILED, wrapped in a JSON object with a 'status' key, according to the schema derived from the TaskStatusResponse type."),
                 .init(role: .user, content: "The report generation is still running.")
             ]
         )
 
-        do {
-            let status: TaskStatus = try await client.getChatCompletion(
-                request: request,
-                responseType: TaskStatus.self
-            )
+        let response: TaskStatusResponse = try await client.getChatCompletion(
+            request: request,
+            responseType: TaskStatusResponse.self
+        )
 
-            print("Decoded Task Status: \(status)")
+        print("Decoded Task Status Response: \(response)")
+        print("Status: \(response.status)")
 
-            #expect(TaskStatus.allCases.contains(status))
-
-        } catch {
-            XCTFail("Failed to get typed enum chat completion: \(error)")
-        }
+        #expect(TaskStatus.allCases.contains(response.status))
     }
 } 
