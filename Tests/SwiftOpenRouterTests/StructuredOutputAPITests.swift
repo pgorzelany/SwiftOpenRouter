@@ -32,7 +32,7 @@ struct StructuredOutputAPITests {
             self.apiKey = key
         } else {
             #warning("API key not set: Set OPENROUTER_API_KEY environment variable for API tests.")
-            self.apiKey = "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"
+            self.apiKey = ""
         }
         self.client = OpenRouterClient(apiKey: self.apiKey)
     }
