@@ -50,6 +50,7 @@ public struct ChatCompletionRequest: Encodable, Sendable {
         case route
         case provider
         case reasoning
+        case responseFormat = "response_format"
     }
 
     public let model: String
@@ -72,6 +73,7 @@ public struct ChatCompletionRequest: Encodable, Sendable {
     public let route: String?
     public let provider: Provider?
     public let reasoning: Reasoning?
+    public let responseFormat: ResponseFormat?
 
     public init(
         model: String,
@@ -93,7 +95,8 @@ public struct ChatCompletionRequest: Encodable, Sendable {
         models: [String]? = nil,
         route: String? = nil,
         provider: Provider? = nil,
-        reasoning: Reasoning? = nil
+        reasoning: Reasoning? = nil,
+        responseFormat: ResponseFormat? = nil
     ) {
         self.model = model
         self.messages = messages
@@ -115,6 +118,26 @@ public struct ChatCompletionRequest: Encodable, Sendable {
         self.route = route
         self.provider = provider
         self.reasoning = reasoning
+        self.responseFormat = responseFormat
+    }
+}
+
+/// Represents the structured output format specification.
+/// See: https://openrouter.ai/docs/features/structured-outputs
+public struct ResponseFormat: Encodable, Sendable {
+    enum CodingKeys: String, CodingKey {
+        case type
+        case jsonSchema = "json_schema"
+    }
+    /// Must be "json_schema".
+    public let type: String
+    public let jsonSchema: JSONSchema
+
+    /// Initializes a ResponseFormat for JSON schema validation.
+    /// - Parameter jsonSchema: The JSON schema definition wrapper.
+    public init(jsonSchema: JSONSchema) {
+        self.type = "json_schema"
+        self.jsonSchema = jsonSchema
     }
 }
 
