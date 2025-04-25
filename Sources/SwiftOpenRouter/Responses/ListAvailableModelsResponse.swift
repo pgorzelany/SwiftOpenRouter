@@ -54,12 +54,12 @@ public struct OpenRouterModel: Decodable, Sendable {
 
         public let prompt: Decimal
         public let completion: Decimal
-        public let image: Decimal
-        public let request: Decimal
-        public let inputCacheRead: Decimal
-        public let inputCacheWrite: Decimal
-        public let webSearch: Decimal
-        public let internalReasoning: Decimal
+        public let image: Decimal?
+        public let request: Decimal?
+        public let inputCacheRead: Decimal?
+        public let inputCacheWrite: Decimal?
+        public let webSearch: Decimal?
+        public let internalReasoning: Decimal?
     }
 }
 
